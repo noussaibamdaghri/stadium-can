@@ -1,108 +1,19 @@
-// app/admin/page.tsx
+// app/page.tsx
 'use client'
-
-import { useState, useRef, useEffect } from 'react'
-import { getParkingLots, updateParkingOccupancy, ParkingLot } from '../../services/parkingService'
 import Link from 'next/link'
 
-export default function AdminPage() {
-  const [parkings, setParkings] = useState<ParkingLot[]>([])
-  const [simulating, setSimulating] = useState(false)
-  const [autoSimulation, setAutoSimulation] = useState(false)
-  const [loading, setLoading] = useState(true)
-
-  const loadParkings = async () => {
-    try {
-      const data = await getParkingLots()
-      setParkings(data)
-    } catch (error) {
-      console.error('Error loading parkings:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    loadParkings()
-  }, [])
-
-  const simulateCarEvent = async (lotId: number, delta: number) => {
-    setSimulating(true)
-    try {
-      await updateParkingOccupancy(lotId, delta)
-      // Recharger après un court délai
-      setTimeout(() => loadParkings(), 500)
-    } catch (error) {
-      console.error('Error simulating event:', error)
-    } finally {
-      setSimulating(false)
-    }
-  }
-
-  // Simulation automatique
-  useEffect(() => {
-    if (!autoSimulation) return
-
-    const interval = setInterval(async () => {
-      if (parkings.length > 0) {
-        const randomParking = parkings[Math.floor(Math.random() * parkings.length)]
-        const delta = Math.random() > 0.5 ? 1 : -1
-        
-        if ((delta === 1 && randomParking.current_occupancy < randomParking.capacity) ||
-            (delta === -1 && randomParking.current_occupancy > 0)) {
-          try {
-            await updateParkingOccupancy(randomParking.id, delta)
-            await loadParkings()
-          } catch (error) {
-            console.error('Auto simulation error:', error)
-          }
-        }
-      }
-    }, 10000) // Toutes les 10 secondes
-
-    return () => clearInterval(interval)
-  }, [autoSimulation, parkings])
-
-  if (loading) {
-    return (
-      <div style={{
-        minHeight: '100vh',
-        background: 'linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #0f172a 100%)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-      }}>
-        <style jsx>{`
-          .spinner {
-            border: 3px solid rgba(139, 92, 246, 0.3);
-            border-top: 3px solid #8b5cf6;
-            border-radius: 50%;
-            width: 3rem;
-            height: 3rem;
-            animation: spin 1s linear infinite;
-          }
-          @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-        `}</style>
-        <div style={{ textAlign: 'center', color: 'white' }}>
-          <div className="spinner" style={{ margin: '0 auto 1rem' }}></div>
-          <p>Chargement des données administrateur...</p>
-        </div>
-      </div>
-    )
-  }
-
+export default function Home() {
   return (
     <>
       <style jsx>{`
-        .admin-container {
+        .hero-container {
           min-height: 100vh;
           background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #0f172a 100%);
-          font-family: 'Inter', sans-serif;
+          display: flex;
+          flex-direction: column;
           position: relative;
-          overflow-x: hidden;
+          overflow: hidden;
+          font-family: 'Inter', sans-serif;
         }
 
         .background-grid {
@@ -122,129 +33,227 @@ export default function AdminPage() {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          background: rgba(15, 23, 42, 0.8);
-          backdrop-filter: blur(10px);
-          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .logo {
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-        }
-
-        .logo-icon {
-          width: 2.5rem;
-          height: 2.5rem;
-          background: linear-gradient(to right, #8b5cf6, #ec4899);
-          border-radius: 0.5rem;
+          width: 3rem;
+          height: 3rem;
+          background: linear-gradient(to right, #10b981, #3b82f6);
+          border-radius: 0.75rem;
           display: flex;
           align-items: center;
           justify-content: center;
+          animation: pulse 2s infinite;
+          box-shadow: 0 25px 50px -12px rgba(59, 130, 246, 0.3);
         }
 
-        .logo-text {
-          color: white;
-          font-size: 1.25rem;
-          font-weight: bold;
-        }
-
-        .logo-subtext {
-          color: #8b5cf6;
-          font-size: 0.875rem;
-          font-weight: 500;
-        }
-
-        .nav-links {
-          display: flex;
-          gap: 1rem;
-        }
-
-        .nav-link {
+        .status-badge {
           background: rgba(255, 255, 255, 0.1);
-          color: white;
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          color: rgba(255, 255, 255, 0.8);
           padding: 0.5rem 1rem;
           border-radius: 0.5rem;
-          text-decoration: none;
-          transition: all 0.3s ease;
-          border: 1px solid rgba(255, 255, 255, 0.2);
           font-size: 0.875rem;
         }
 
-        .nav-link:hover {
-          background: rgba(255, 255, 255, 0.2);
-          transform: translateY(-2px);
-        }
-
-        .nav-link.primary {
-          background: linear-gradient(to right, #3b82f6, #2563eb);
-        }
-
-        .nav-link.primary:hover {
-          background: linear-gradient(to right, #2563eb, #1d4ed8);
-        }
-
-        .content-container {
+        .hero-section {
+          flex: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0 1.5rem;
           position: relative;
           z-index: 10;
-          max-width: 80rem;
-          margin: 0 auto;
-          padding: 2rem 1.5rem;
         }
 
-        .header {
+        .hero-content {
           text-align: center;
-          margin-bottom: 3rem;
+          max-width: 64rem;
         }
 
-        .main-title {
-          font-size: 3rem;
+        .main-icon {
+          width: 7rem;
+          height: 7rem;
+          background: linear-gradient(to right, #10b981, #3b82f6);
+          border-radius: 1.5rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin: 0 auto 2rem;
+          animation: pulse 2s infinite;
+          box-shadow: 0 25px 50px -12px rgba(59, 130, 246, 0.3);
+          position: relative;
+        }
+
+        .floating-dot {
+          position: absolute;
+          top: -0.75rem;
+          right: -0.75rem;
+          width: 2rem;
+          height: 2rem;
+          background: #fbbf24;
+          border-radius: 50%;
+          animation: bounce 2s infinite;
+          box-shadow: 0 10px 25px -5px rgba(251, 191, 36, 0.5);
+        }
+
+        .main-heading {
+          font-size: 3.75rem;
           font-weight: bold;
           color: white;
-          margin-bottom: 0.5rem;
+          margin-bottom: 1.5rem;
+          line-height: 1.25;
         }
 
-        @media (max-width: 768px) {
-          .main-title {
-            font-size: 2.25rem;
+        @media (min-width: 768px) {
+          .main-heading {
+            font-size: 4.5rem;
           }
+        }
+
+        .gradient-text {
+          background: linear-gradient(to right, #86efac, #93c5fd);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          display: block;
+          margin-top: 0.5rem;
         }
 
         .subtitle {
           font-size: 1.25rem;
           color: #d1d5db;
+          margin-bottom: 3rem;
+          max-width: 42rem;
+          margin-left: auto;
+          margin-right: auto;
+          line-height: 1.75;
         }
 
-        .card {
+        .features-grid {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 1.5rem;
+          margin-bottom: 3rem;
+          max-width: 64rem;
+          margin-left: auto;
+          margin-right: auto;
+        }
+
+        @media (min-width: 768px) {
+          .features-grid {
+            grid-template-columns: repeat(3, 1fr);
+          }
+        }
+
+        .feature-card {
           background: rgba(255, 255, 255, 0.1);
           backdrop-filter: blur(10px);
           border: 1px solid rgba(255, 255, 255, 0.2);
           border-radius: 1rem;
           padding: 1.5rem;
-          margin-bottom: 2rem;
           transition: all 0.3s ease;
         }
 
-        .card:hover {
-          border-color: rgba(255, 255, 255, 0.3);
-          transform: translateY(-2px);
-          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        .feature-card:hover {
+          border-color: rgba(16, 185, 129, 0.5);
+          transform: scale(1.05);
         }
 
-        .card-title {
-          font-size: 1.5rem;
-          font-weight: 600;
-          color: white;
-          margin-bottom: 1rem;
+        .feature-icon {
+          width: 3.5rem;
+          height: 3.5rem;
+          background: rgba(16, 185, 129, 0.2);
+          border-radius: 0.75rem;
           display: flex;
           align-items: center;
-          gap: 0.5rem;
+          justify-content: center;
+          margin: 0 auto 1rem;
+        }
+
+        .feature-icon.blue {
+          background: rgba(59, 130, 246, 0.2);
+        }
+
+        .feature-icon.purple {
+          background: rgba(139, 92, 246, 0.2);
+        }
+
+        .feature-title {
+          color: white;
+          font-weight: 600;
+          margin-bottom: 0.5rem;
+          font-size: 1.125rem;
+        }
+
+        .feature-desc {
+          color: #9ca3af;
+          font-size: 0.875rem;
+        }
+
+        .buttons-container {
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+          justify-content: center;
+          align-items: center;
+          margin-bottom: 4rem;
+        }
+
+        @media (min-width: 640px) {
+          .buttons-container {
+            flex-direction: row;
+          }
+        }
+
+        .btn {
+          position: relative;
+          color: white;
+          padding: 1rem 2rem;
+          border-radius: 1rem;
+          font-weight: 600;
+          text-decoration: none;
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          min-width: 200px;
+          justify-content: center;
+          transition: all 0.3s ease;
+          box-shadow: 0 25px 50px -12px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-supporter {
+          background: linear-gradient(to right, #10b981, #059669);
+        }
+
+        .btn-supporter:hover {
+          background: linear-gradient(to right, #059669, #047857);
+          transform: scale(1.05);
+          box-shadow: 0 25px 50px -12px rgba(16, 185, 129, 0.5);
+        }
+
+        .btn-admin {
+          background: linear-gradient(to right, #3b82f6, #2563eb);
+        }
+
+        .btn-admin:hover {
+          background: linear-gradient(to right, #2563eb, #1d4ed8);
+          transform: scale(1.05);
+          box-shadow: 0 25px 50px -12px rgba(59, 130, 246, 0.5);
+        }
+
+        .stats-bar {
+          margin-top: 4rem;
+          padding-top: 2rem;
+          border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .stats-grid {
           display: grid;
           grid-template-columns: repeat(2, 1fr);
           gap: 1.5rem;
+          text-align: center;
         }
 
         @media (min-width: 768px) {
@@ -253,256 +262,32 @@ export default function AdminPage() {
           }
         }
 
-        .stat-card {
-          background: rgba(255, 255, 255, 0.05);
-          border-radius: 0.75rem;
-          padding: 1.5rem;
-          text-align: center;
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          transition: all 0.3s ease;
-        }
-
-        .stat-card:hover {
-          transform: translateY(-4px);
-          box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
-        }
-
         .stat-number {
-          font-size: 2rem;
+          font-size: 1.5rem;
           font-weight: bold;
           color: white;
-          margin-bottom: 0.5rem;
         }
-
-        .stat-blue { color: #60a5fa; }
-        .stat-green { color: #34d399; }
-        .stat-yellow { color: #fbbf24; }
-        .stat-purple { color: #a78bfa; }
 
         .stat-label {
           color: #9ca3af;
           font-size: 0.875rem;
         }
 
-        .automation-controls {
-          display: flex;
-          gap: 1rem;
-          margin-bottom: 1rem;
-          flex-wrap: wrap;
-        }
-
-        .btn {
-          padding: 0.75rem 1.5rem;
-          border-radius: 0.75rem;
-          font-weight: 600;
-          border: none;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-        }
-
-        .btn:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-          transform: none !important;
-        }
-
-        .btn-primary {
-          background: linear-gradient(to right, #10b981, #059669);
-          color: white;
-        }
-
-        .btn-primary:hover:not(:disabled) {
-          background: linear-gradient(to right, #059669, #047857);
-          transform: translateY(-2px);
-          box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
-        }
-
-        .btn-secondary {
-          background: rgba(255, 255, 255, 0.1);
-          color: white;
-          border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .btn-secondary:hover:not(:disabled) {
-          background: rgba(255, 255, 255, 0.2);
-          transform: translateY(-2px);
-        }
-
-        .btn-danger {
-          background: linear-gradient(to right, #ef4444, #dc2626);
-          color: white;
-        }
-
-        .btn-danger:hover:not(:disabled) {
-          background: linear-gradient(to right, #dc2626, #b91c1c);
-          transform: translateY(-2px);
-          box-shadow: 0 10px 25px rgba(239, 68, 68, 0.3);
-        }
-
-        .automation-status {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          color: #9ca3af;
-          font-size: 0.875rem;
-        }
-
-        .status-indicator {
-          width: 0.5rem;
-          height: 0.5rem;
-          border-radius: 50%;
-          background: #ef4444;
-        }
-
-        .status-indicator.active {
-          background: #10b981;
-          animation: pulse 2s infinite;
-        }
-
-        .parkings-grid {
-          display: grid;
-          grid-template-columns: 1fr;
-          gap: 1.5rem;
-        }
-
-        @media (min-width: 768px) {
-          .parkings-grid {
-            grid-template-columns: repeat(2, 1fr);
-          }
-        }
-
-        @media (min-width: 1024px) {
-          .parkings-grid {
-            grid-template-columns: repeat(3, 1fr);
-          }
-        }
-
-        .parking-card {
-          background: rgba(255, 255, 255, 0.05);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 0.75rem;
-          padding: 1.5rem;
-          transition: all 0.3s ease;
-        }
-
-        .parking-card:hover {
-          border-color: rgba(255, 255, 255, 0.2);
-          transform: translateY(-4px);
-          box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
-        }
-
-        .parking-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          margin-bottom: 1rem;
-        }
-
-        .parking-name {
-          color: white;
-          font-size: 1.125rem;
-          font-weight: 600;
-        }
-
-        .parking-occupancy {
-          color: #9ca3af;
-          font-size: 0.875rem;
-        }
-
-        .progress-container {
-          margin-bottom: 1.5rem;
-        }
-
-        .progress-info {
-          display: flex;
-          justify-content: space-between;
-          color: #9ca3af;
-          font-size: 0.875rem;
-          margin-bottom: 0.5rem;
-        }
-
-        .progress-bar {
+        .footer {
           width: 100%;
-          height: 0.5rem;
-          background: rgba(255, 255, 255, 0.1);
-          border-radius: 9999px;
-          overflow: hidden;
+          padding: 1.5rem;
+          text-align: center;
+          border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .progress-fill {
-          height: 100%;
-          border-radius: 9999px;
-          transition: width 0.5s ease;
-          background: linear-gradient(to right, #10b981, #3b82f6);
+        .footer-text {
+          color: #9ca3af;
+          font-size: 0.875rem;
         }
 
-        .simulation-controls {
-          display: flex;
-          gap: 0.5rem;
-        }
-
-        .simulation-btn {
-          flex: 1;
-          padding: 0.5rem;
-          border-radius: 0.5rem;
-          border: none;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 0.25rem;
-        }
-
-        .simulation-btn:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-          transform: none !important;
-        }
-
-        .btn-enter {
-          background: linear-gradient(to right, #10b981, #059669);
-          color: white;
-        }
-
-        .btn-enter:hover:not(:disabled) {
-          background: linear-gradient(to right, #059669, #047857);
-          transform: translateY(-2px);
-        }
-
-        .btn-exit {
-          background: linear-gradient(to right, #ef4444, #dc2626);
-          color: white;
-        }
-
-        .btn-exit:hover:not(:disabled) {
-          background: linear-gradient(to right, #dc2626, #b91c1c);
-          transform: translateY(-2px);
-        }
-
-        .refresh-btn {
-          background: linear-gradient(to right, #3b82f6, #2563eb);
-          color: white;
-          padding: 0.75rem 1.5rem;
-          border-radius: 0.75rem;
-          border: none;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          margin-top: 1rem;
-        }
-
-        .refresh-btn:hover {
-          background: linear-gradient(to right, #2563eb, #1d4ed8);
-          transform: translateY(-2px);
-          box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
+        .online-status {
+          color: #10b981;
+          margin-left: 0.25rem;
         }
 
         .floating-elements div {
@@ -513,8 +298,8 @@ export default function AdminPage() {
         }
 
         .element-1 {
-          top: 20%;
-          left: 5%;
+          top: 25%;
+          left: 10%;
           width: 1rem;
           height: 1rem;
           background: #60a5fa;
@@ -522,8 +307,8 @@ export default function AdminPage() {
         }
 
         .element-2 {
-          top: 60%;
-          right: 10%;
+          top: 33%;
+          right: 20%;
           width: 1.5rem;
           height: 1.5rem;
           background: #34d399;
@@ -531,12 +316,21 @@ export default function AdminPage() {
         }
 
         .element-3 {
-          bottom: 30%;
-          left: 15%;
+          bottom: 25%;
+          left: 20%;
           width: 0.75rem;
           height: 0.75rem;
           background: #a78bfa;
           animation-delay: 1.5s;
+        }
+
+        .element-4 {
+          bottom: 33%;
+          right: 10%;
+          width: 1.25rem;
+          height: 1.25rem;
+          background: #fbbf24;
+          animation-delay: 2.25s;
         }
 
         @keyframes pulse {
@@ -544,158 +338,134 @@ export default function AdminPage() {
           50% { opacity: 0.6; transform: scale(1.1); }
         }
 
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
+        @keyframes bounce {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-10px); }
         }
       `}</style>
 
-      <div className="admin-container">
+      <div className="hero-container">
         {/* Background Elements */}
         <div className="background-grid"></div>
         <div className="floating-elements">
           <div className="element-1"></div>
           <div className="element-2"></div>
           <div className="element-3"></div>
+          <div className="element-4"></div>
         </div>
 
         {/* Navigation Header */}
         <nav className="nav-container">
-          <div className="logo">
-            <div className="logo-icon">
-              <span style={{ color: 'white', fontWeight: 'bold', fontSize: '1rem' }}>🔧</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div className="logo">
+              <span style={{ color: 'white', fontWeight: 'bold', fontSize: '1.25rem' }}>🏟️</span>
             </div>
             <div>
-              <div className="logo-text">CAN 2025</div>
-              <div className="logo-subtext">Administration</div>
+              <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'white' }}>CAN 2025</h1>
+              <p style={{ color: '#10b981', fontSize: '0.875rem', fontWeight: '500' }}>Système Intelligent</p>
             </div>
           </div>
-          <div className="nav-links">
-            <Link href="/supporter" className="nav-link primary">
-              👨‍💼 Voir Supporters
-            </Link>
-            <Link href="/" className="nav-link">
-              🏠 Accueil
-            </Link>
+          <div className="status-badge">
+            🟢 En ligne
           </div>
         </nav>
 
-        {/* Main Content */}
-        <div className="content-container">
-          {/* Header */}
-          <div className="header">
-            <h1 className="main-title">🔧 Administration CAN</h1>
-            <p className="subtitle">Interface de gestion du stade en temps réel</p>
-          </div>
-
-          {/* Statistics - MAINTENANT EN PREMIER */}
-          <div className="card">
-            <h2 className="card-title">📈 Statistiques Globales</h2>
-            <div className="stats-grid">
-              <div className="stat-card">
-                <div className="stat-number stat-blue">{parkings.length}</div>
-                <div className="stat-label">Parkings gérés</div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-number stat-green">
-                  {parkings.reduce((total, p) => total + p.capacity, 0)}
+        {/* Hero Section */}
+        <div className="hero-section">
+          <div className="hero-content">
+            {/* Animated Icon */}
+            <div style={{ marginBottom: '2rem' }}>
+              <div style={{ position: 'relative', display: 'inline-block' }}>
+                <div className="main-icon">
+                  <span style={{ fontSize: '3rem' }}>⚽</span>
                 </div>
-                <div className="stat-label">Capacité totale</div>
+                <div className="floating-dot"></div>
               </div>
-              <div className="stat-card">
-                <div className="stat-number stat-yellow">
-                  {parkings.reduce((total, p) => total + p.current_occupancy, 0)}
+            </div>
+
+            {/* Main Heading */}
+            <h1 className="main-heading">
+              Guide
+              <span className="gradient-text">Intelligent</span>
+            </h1>
+
+            {/* Subtitle */}
+            <p className="subtitle">
+              Système de gestion du trafic et des parkings en temps réel pour la CAN 2025. 
+              Optimisez votre expérience grâce à l'analyse intelligente des données.
+            </p>
+
+            {/* Features Grid */}
+            <div className="features-grid">
+              <div className="feature-card">
+                <div className="feature-icon">
+                  <span style={{ fontSize: '1.5rem' }}>🚗</span>
                 </div>
-                <div className="stat-label">Véhicules actuels</div>
+                <h3 className="feature-title">Parkings Temps Réel</h3>
+                <p className="feature-desc">Occupation en direct et recommandations</p>
               </div>
-              <div className="stat-card">
-                <div className="stat-number stat-purple">
-                  {parkings.length > 0 ? 
-                    ((parkings.reduce((total, p) => total + p.current_occupancy, 0) / 
-                      parkings.reduce((total, p) => total + p.capacity, 1)) * 100).toFixed(1) 
-                    : '0'}%
+
+              <div className="feature-card">
+                <div className="feature-icon blue">
+                  <span style={{ fontSize: '1.5rem' }}>🚦</span>
                 </div>
-                <div className="stat-label">Occupation moyenne</div>
+                <h3 className="feature-title">Analyse Trafic</h3>
+                <p className="feature-desc">Données trafic et prédictions intelligentes</p>
+              </div>
+
+              <div className="feature-card">
+                <div className="feature-icon purple">
+                  <span style={{ fontSize: '1.5rem' }}>⚡</span>
+                </div>
+                <h3 className="feature-title">Multi-Cloud</h3>
+                <p className="feature-desc">Architecture cloud moderne et scalable</p>
               </div>
             </div>
-          </div>
 
-          {/* Automation Section */}
-          <div className="card">
-            <h2 className="card-title">🤖 Automatisation</h2>
-            <div className="automation-controls">
-              <button
-                onClick={() => setAutoSimulation(!autoSimulation)}
-                className={`btn ${autoSimulation ? 'btn-danger' : 'btn-primary'}`}
-              >
-                {autoSimulation ? '⏹️ Arrêter Simulation' : '🚀 Démarrer Simulation Auto'}
-              </button>
-            </div>
-            <div className="automation-status">
-              <div className={`status-indicator ${autoSimulation ? 'active' : ''}`}></div>
-              <span>Statut: {autoSimulation ? '🟢 ACTIF' : '🔴 INACTIF'}</span>
-              <span style={{ marginLeft: 'auto' }}>• Événements simulés toutes les 10 sec</span>
-            </div>
-          </div>
+            {/* Action Buttons */}
+            <div className="buttons-container">
+              <Link href="/supporter" className="btn btn-supporter">
+                <span style={{ fontSize: '1.25rem' }}>👨‍💼</span>
+                <span>Espace Supporters</span>
+              </Link>
 
-          {/* Parking Simulation */}
-          <div className="card">
-            <h2 className="card-title">🎮 Simulation Temps Réel</h2>
-            <div className="parkings-grid">
-              {parkings.map((parking) => {
-                const percentage = (parking.current_occupancy / parking.capacity) * 100
-                
-                return (
-                  <div key={parking.id} className="parking-card">
-                    <div className="parking-header">
-                      <h3 className="parking-name">{parking.name}</h3>
-                      <div className="parking-occupancy">
-                        {parking.current_occupancy}/{parking.capacity}
-                      </div>
-                    </div>
-                    
-                    <div className="progress-container">
-                      <div className="progress-info">
-                        <span>Occupation</span>
-                        <span>{percentage.toFixed(1)}%</span>
-                      </div>
-                      <div className="progress-bar">
-                        <div 
-                          className="progress-fill"
-                          style={{ width: `${percentage}%` }}
-                        ></div>
-                      </div>
-                    </div>
-
-                    <div className="simulation-controls">
-                      <button
-                        onClick={() => simulateCarEvent(parking.id, 1)}
-                        disabled={simulating || parking.current_occupancy >= parking.capacity}
-                        className="simulation-btn btn-enter"
-                      >
-                        ➕ Entrée
-                      </button>
-                      <button
-                        onClick={() => simulateCarEvent(parking.id, -1)}
-                        disabled={simulating || parking.current_occupancy <= 0}
-                        className="simulation-btn btn-exit"
-                      >
-                        ➖ Sortie
-                      </button>
-                    </div>
-                  </div>
-                )
-              })}
+              <Link href="/admin" className="btn btn-admin">
+                <span style={{ fontSize: '1.25rem' }}>🔧</span>
+                <span>Espace Administrateur</span>
+              </Link>
             </div>
 
-            <button
-              onClick={loadParkings}
-              className="refresh-btn"
-            >
-              📊 Actualiser les Données
-            </button>
+            {/* Stats Bar */}
+            <div className="stats-bar">
+              <div className="stats-grid">
+                <div>
+                  <div className="stat-number">3+</div>
+                  <div className="stat-label">Parkings</div>
+                </div>
+                <div>
+                  <div className="stat-number">24/7</div>
+                  <div className="stat-label">Surveillance</div>
+                </div>
+                <div>
+                  <div className="stat-number">99%</div>
+                  <div className="stat-label">Précision</div>
+                </div>
+                <div>
+                  <div className="stat-number">⚡</div>
+                  <div className="stat-label">Temps Réel</div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
+
+        {/* Footer */}
+        <footer className="footer">
+          <p className="footer-text">
+            Système CAN 2025 • Architecture Multi-Cloud • 
+            <span className="online-status">🟢 En ligne</span>
+          </p>
+        </footer>
       </div>
     </>
   )
